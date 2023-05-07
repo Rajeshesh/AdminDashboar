@@ -1,4 +1,6 @@
 const Product = require("../models/Product");
+const User = require("../models/User");
+const Transaction = require("../models/Transaction");
 const ProductStat = require("../models/ProductStat");
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
@@ -17,4 +19,55 @@ exports.getProducts = catchAsyncError(async (req, res, next) => {
     next(new ErrorHandler("productsWithStats not found", 401));
   }
   res.status(200).json(ProductWithStats);
+});
+
+exports.getCustomers = catchAsyncError(async (req, res, next) => {
+  const customers = await User.find({ role: "user" }).select("-password");
+
+  if (!customers) {
+    next(new ErrorHandler("customers not found", 401));
+  }
+  res.status(200).json(customers);
+});
+
+exports.getTransactions = catchAsyncError(async (req, res, next) => {
+  const { page = 0, pageSize = 20, sort = null, search = "" } = req.query;
+
+  const generatSort = () => {
+    const sortParsed = JSON.parse(sort);
+    const sortFormatted = {
+      [sortParsed.field]: (sortParsed.sort = "asc" ? 1 : -1),
+    };
+    return sortFormatted;
+  };
+
+  const sortFormatted = Boolean(sort) ? generatSort() : {};
+
+  const transactions = await Transaction.find({
+    $or: [
+      { cost: { $regex: new RegExp(search, "i") } },
+      { userId: { $regex: new RegExp(search, "i") } },
+    ],
+  })
+    .sort(sortFormatted)
+    .skip(page * pageSize)
+    .limit(pageSize);
+
+  const total = await Transaction.countDocuments({
+    userId: { $regex: search, $options: "i" },
+  });
+
+  if (!transactions) {
+    next(new ErrorHandler("transactions not found", 401));
+  }
+  res.status(200).json({ transactions, total });
+});
+
+exports.getGeography = catchAsyncError(async (req, res, next) => {
+  const customers = await User.find({ role: "user" }).select("-password");
+
+  if (!customers) {
+    next(new ErrorHandler("customers not found", 401));
+  }
+  res.status(200).json(customers);
 });

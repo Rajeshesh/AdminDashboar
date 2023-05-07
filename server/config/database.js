@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
-const { dataUser, dataProduct, dataProductStat } = require("../data/index");
+const { dataUser, dataProduct, dataProductStat,dataTransaction } = require("../data/index");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const ProductStat = require("../models/ProductStat");
+const Transaction = require("../models/Transaction");
 
 const connectDatabase = () => {
   mongoose
@@ -16,6 +17,7 @@ const connectDatabase = () => {
       // User.insertMany();//dataUser
       // Product.insertMany();//dataProduct
       // ProductStat.insertMany();//dataProductStat
+      // Transaction.insertMany();//dataTransaction
     });
 };
 
