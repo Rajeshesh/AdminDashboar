@@ -1,3 +1,4 @@
+const getCountryIso3 = require("country-iso-2-to-3");
 const Product = require("../models/Product");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
@@ -64,10 +65,22 @@ exports.getTransactions = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getGeography = catchAsyncError(async (req, res, next) => {
-  const customers = await User.find({ role: "user" }).select("-password");
+  const users = await User.find().select("-password");
+  const mappedLocations = users.reduce((acc, { country }) => {
+    const countryISO3 = getCountryIso3(country);
+    if (!acc.has(countryISO3)) {
+      acc.set(countryISO3, 0);
+    }
+    return acc.set(countryISO3, acc.get(countryISO3) + 1);
+  }, new Map());
 
-  if (!customers) {
-    next(new ErrorHandler("customers not found", 401));
+  const mapArr = [];
+  mappedLocations.forEach((val, key) => {
+    mapArr.push({ id: key, value: val });
+  });
+
+  if (!mapArr) {
+    next(new ErrorHandler("mapArr not found", 401));
   }
-  res.status(200).json(customers);
+  res.status(200).json(mapArr);
 });
